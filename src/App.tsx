@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
+import { saveToGoogleSheet, formatDataForGoogleSheet } from "./googleSheets";
 
 // Import audio files
 import doAudio from "./assets/notes/Do.mp3";
@@ -50,6 +51,13 @@ function App() {
   // State to track the selected color for each note
   const [noteColors, setNoteColors] = useState<Record<string, string>>({});
 
+  // State for submission status
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
   // Create audio elements for each note
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
 
@@ -84,7 +92,7 @@ function App() {
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Check if all notes have a color selected
     const allNotesColored = musicNotes.every(({ note }) => noteColors[note]);
 
@@ -96,11 +104,40 @@ function App() {
     // Log the results
     console.log("Music Note to Color Matching Results:");
     musicNotes.forEach(({ note, solfege }) => {
-      const colorValue = noteColors[note];
-      console.log(`${note} (${solfege}): ${colorValue}`);
+      console.log(`${note} (${solfege}): ${noteColors[note]}`);
     });
 
-    // You could also save the results to a file or send them to a server here
+    // Save to Google Sheet
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      // Format the data for Google Sheets
+      const formattedData = formatDataForGoogleSheet(noteColors, musicNotes);
+
+      console.log("Formatted Data:", formattedData);
+
+      // Save to Google Sheet
+      const result = await saveToGoogleSheet(formattedData);
+
+      setSubmitStatus({
+        success: result.success,
+        message: result.message,
+      });
+
+      if (result.success) {
+        // Clear the form after successful submission
+        setNoteColors({});
+      }
+    } catch (error) {
+      console.error("Error submitting data:", error);
+      setSubmitStatus({
+        success: false,
+        message: "An error occurred while saving your data.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -148,9 +185,18 @@ function App() {
           </div>
         ))}
       </div>
-      <button onClick={handleSubmit} className="submit-button">
-        Submit
-      </button>
+
+      <div className="submit-container">
+        <button onClick={handleSubmit} className="submit-button" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Submit"}
+        </button>
+
+        {submitStatus && (
+          <div className={`status-message ${submitStatus.success ? "success" : "error"}`}>
+            {submitStatus.message}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
