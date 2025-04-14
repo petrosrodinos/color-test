@@ -1,35 +1,158 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useRef, useEffect } from "react";
+import "./App.css";
+
+// Import audio files
+import doAudio from "./assets/notes/Do.mp3";
+import reAudio from "./assets/notes/Re.mp3";
+import miAudio from "./assets/notes/Mi.mp3";
+import faAudio from "./assets/notes/Fa.mp3";
+import solAudio from "./assets/notes/Sol.mp3";
+import laAudio from "./assets/notes/La.mp3";
+import siAudio from "./assets/notes/Si.mp3";
+
+// Define the music notes with their solfège labels
+const musicNotes = [
+  { note: "C", solfege: "Do" },
+  { note: "D", solfege: "Re" },
+  { note: "E", solfege: "Mi" },
+  { note: "F", solfege: "Fa" },
+  { note: "G", solfege: "Sol" },
+  { note: "A", solfege: "La" },
+  { note: "B", solfege: "Si" },
+];
+
+// Define the colors
+const colors = [
+  { label: "Red", name: "red", value: "#FF0000" },
+  { label: "Orange", name: "orange", value: "#FF7F00" },
+  { label: "Yellow", name: "yellow", value: "#FFFF00" },
+  { label: "Green", name: "green", value: "#00FF00" },
+  { label: "Blue", name: "blue", value: "#0000FF" },
+  { label: "Indigo", name: "indigo", value: "#4B0082" },
+  { label: "Violet", name: "violet", value: "#9400D3" },
+];
+
+// Define the type for solfège names
+type SolfegeName = "Do" | "Re" | "Mi" | "Fa" | "Sol" | "La" | "Si";
+
+// Map solfège names to audio files
+const audioFiles: Record<SolfegeName, string> = {
+  Do: doAudio,
+  Re: reAudio,
+  Mi: miAudio,
+  Fa: faAudio,
+  Sol: solAudio,
+  La: laAudio,
+  Si: siAudio,
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  // State to track the selected color for each note
+  const [noteColors, setNoteColors] = useState<Record<string, string>>({});
+
+  // Create audio elements for each note
+  const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
+
+  // Initialize audio elements
+  useEffect(() => {
+    musicNotes.forEach(({ solfege }) => {
+      if (!audioRefs.current[solfege] && audioFiles[solfege as SolfegeName]) {
+        audioRefs.current[solfege] = new Audio(audioFiles[solfege as SolfegeName]);
+      }
+    });
+  }, []);
+
+  // Handle color selection for a note
+  const handleColorChange = (note: string, color: string) => {
+    setNoteColors((prev) => ({
+      ...prev,
+      [note]: color,
+    }));
+  };
+
+  // Handle playing a note
+  const playNote = (solfege: string) => {
+    const audio = audioRefs.current[solfege];
+    if (audio) {
+      audio.currentTime = 0; // Reset to beginning
+      audio.play().catch((error) => {
+        console.error(`Error playing note ${solfege}:`, error);
+      });
+    } else {
+      console.error(`Audio not found for note ${solfege}`);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    // Check if all notes have a color selected
+    const allNotesColored = musicNotes.every(({ note }) => noteColors[note]);
+
+    if (!allNotesColored) {
+      alert("Please select a color for all notes before submitting.");
+      return;
+    }
+
+    // Log the results
+    console.log("Music Note to Color Matching Results:");
+    musicNotes.forEach(({ note, solfege }) => {
+      const colorValue = noteColors[note];
+      console.log(`${note} (${solfege}): ${colorValue}`);
+    });
+
+    // You could also save the results to a file or send them to a server here
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app-container">
+      <h1>Music Note to Color Matching</h1>
+      <p>Select a color for each music note</p>
+
+      <div className="notes-container">
+        {musicNotes.map(({ note, solfege }) => (
+          <div key={note} className="note-item">
+            <div className="note-header">
+              <div className="note-name">
+                {note} <span className="solfege-label">({solfege})</span>
+              </div>
+              <button
+                className="play-button"
+                onClick={() => playNote(solfege)}
+                aria-label={`Play ${note} note`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="play-icon"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            </div>
+            <div className="color-options">
+              {colors.map((color) => (
+                <label key={color.name} className="color-option">
+                  <input
+                    type="radio"
+                    name={`note-${note}`}
+                    value={color.name}
+                    checked={noteColors[note] === color.name}
+                    onChange={() => handleColorChange(note, color.name)}
+                  />
+                  <span className="color-swatch" style={{ backgroundColor: color.value }}></span>
+                  <span className="color-name">{color.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <button onClick={handleSubmit} className="submit-button">
+        Submit
+      </button>
+    </div>
+  );
 }
 
-export default App
+export default App;
