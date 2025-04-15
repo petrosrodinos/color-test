@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import { saveToGoogleSheet, formatDataForGoogleSheet } from "./googleSheets";
 import Result from "./components/Result";
 import Stats from "./pages/Stats";
@@ -113,12 +113,12 @@ function App() {
     <Router>
       <div className="App">
         <nav className="nav-container">
-          <Link to="/" className="nav-link">
+          <NavLink to="/" className="nav-link" end>
             Home
-          </Link>
-          <Link to="/stats" className="nav-link">
+          </NavLink>
+          <NavLink to="/stats" className="nav-link">
             Statistics
-          </Link>
+          </NavLink>
         </nav>
 
         <Routes>
