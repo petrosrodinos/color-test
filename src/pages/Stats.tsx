@@ -112,6 +112,49 @@ const Stats: React.FC = () => {
     return distribution;
   };
 
+  // Calculate individual test scores
+  const calculateTestScore = (result: TestResult) => {
+    let correct = 0;
+    let total = 0;
+
+    Object.entries(correctAnswers).forEach(([note, correctColor]) => {
+      if (result[note as keyof TestResult]) {
+        total++;
+        if (result[note as keyof TestResult] === correctColor) {
+          correct++;
+        }
+      }
+    });
+
+    return total > 0 ? Math.round((correct / total) * 100) : 0;
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleString();
+    } catch (e) {
+      return timestamp;
+    }
+  };
+
+  // Get color style for display
+  const getColorStyle = (colorName: string) => {
+    const color = colors.find((c) => c.name === colorName);
+    return color ? { color: color.value } : {};
+  };
+
+  // Compare with average score
+  const compareWithAverage = (score: number) => {
+    const avgScore = calculateAccuracy();
+    const diff = score - avgScore;
+
+    if (diff > 5) return { text: `+${diff}% above average`, class: "better-than-average" };
+    if (diff < -5) return { text: `${diff}% below average`, class: "worse-than-average" };
+    return { text: "Average", class: "average" };
+  };
+
   if (loading) return <div className="stats-container">Loading statistics...</div>;
   if (error) return <div className="stats-container error">{error}</div>;
 
@@ -180,6 +223,45 @@ const Stats: React.FC = () => {
                   {colors.map((color) => (
                     <td key={color.name}>{distribution[color.name]}</td>
                   ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="results-table">
+        <h2>Individual Test Results</h2>
+        <table className="test-results-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>C</th>
+              <th>D</th>
+              <th>E</th>
+              <th>F</th>
+              <th>G</th>
+              <th>A</th>
+              <th>B</th>
+              <th>Score</th>
+              <th>Comparison</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((result, index) => {
+              const score = calculateTestScore(result);
+              const comparison = compareWithAverage(score);
+
+              return (
+                <tr key={index} className={index % 2 === 0 ? "even-row" : "odd-row"}>
+                  <td>{formatTimestamp(result.timestamp)}</td>
+                  {["C", "D", "E", "F", "G", "A", "B"].map((note) => (
+                    <td key={note} style={getColorStyle(result[note as keyof TestResult])}>
+                      {result[note as keyof TestResult]}
+                    </td>
+                  ))}
+                  <td className="score-cell">{score}%</td>
+                  <td className={`comparison-cell ${comparison.class}`}>{comparison.text}</td>
                 </tr>
               );
             })}

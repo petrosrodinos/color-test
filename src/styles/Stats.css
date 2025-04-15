@@ -1,6 +1,7 @@
 .stats-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 1rem;
 }
 
 .stats-container h1 {
@@ -77,6 +78,51 @@
   background-color: lightgray;
 }
 
+/* Individual Test Results Table Styling */
+.test-results-table {
+  font-size: 0.9rem;
+}
+
+.test-results-table th,
+.test-results-table td {
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.test-results-table th:first-child,
+.test-results-table td:first-child {
+  text-align: left;
+  min-width: 150px;
+}
+
+.even-row {
+  background-color: #f9f9f9;
+}
+
+.odd-row {
+  background-color: #ffffff;
+}
+
+.score-cell {
+  font-weight: bold;
+}
+
+.comparison-cell {
+  font-style: italic;
+}
+
+.better-than-average {
+  color: #4caf50;
+}
+
+.worse-than-average {
+  color: #f44336;
+}
+
+.average {
+  color: #757575;
+}
+
 .error {
   color: #dc3545;
   text-align: center;
@@ -101,5 +147,11 @@
 
   .results-table table {
     min-width: 600px;
+  }
+
+  .test-results-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
