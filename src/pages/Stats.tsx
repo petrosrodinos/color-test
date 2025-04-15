@@ -13,6 +13,10 @@ interface TestResult {
   B: string;
 }
 
+interface ColorDistribution {
+  [color: string]: number;
+}
+
 const correctAnswers: Record<string, string> = {
   C: "red",
   D: "orange",
@@ -22,6 +26,8 @@ const correctAnswers: Record<string, string> = {
   A: "indigo",
   B: "violet",
 };
+
+const allColors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
 
 const Stats: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
@@ -97,6 +103,24 @@ const Stats: React.FC = () => {
     return Math.round((correctCount / noteResults.length) * 100);
   };
 
+  const getColorDistribution = (note: string): ColorDistribution => {
+    const distribution: ColorDistribution = {};
+    // Initialize all colors with 0
+    allColors.forEach((color) => {
+      distribution[color] = 0;
+    });
+
+    // Count occurrences of each color
+    results.forEach((result) => {
+      const color = result[note as keyof TestResult];
+      if (color) {
+        distribution[color] = (distribution[color] || 0) + 1;
+      }
+    });
+
+    return distribution;
+  };
+
   if (loading) return <div className="stats-container">Loading statistics...</div>;
   if (error) return <div className="stats-container error">{error}</div>;
 
@@ -135,6 +159,35 @@ const Stats: React.FC = () => {
                 <td>{calculateNoteAccuracy(note)}%</td>
               </tr>
             ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="results-table">
+        <h2>Color Distribution by Note</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Note</th>
+              {allColors.map((color) => (
+                <th key={color} style={{ color: color }}>
+                  {color.charAt(0).toUpperCase() + color.slice(1)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {["C", "D", "E", "F", "G", "A", "B"].map((note) => {
+              const distribution = getColorDistribution(note);
+              return (
+                <tr key={note}>
+                  <td>{note}</td>
+                  {allColors.map((color) => (
+                    <td key={color}>{distribution[color]}</td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
