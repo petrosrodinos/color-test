@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Stats.css";
 import { getSpreasheetData } from "../sheets";
+import { colors, correctAnswers } from "../constants";
 
 interface TestResult {
   timestamp: string;
@@ -17,17 +18,17 @@ interface ColorDistribution {
   [color: string]: number;
 }
 
-const correctAnswers: Record<string, string> = {
-  C: "red",
-  D: "orange",
-  E: "yellow",
-  F: "green",
-  G: "blue",
-  A: "indigo",
-  B: "violet",
-};
+// Define the colors array (same as in App.tsx)
 
-const allColors = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"];
+const noteToSolfege: Record<string, string> = {
+  C: "Do",
+  D: "Re",
+  E: "Mi",
+  F: "Fa",
+  G: "Sol",
+  A: "La",
+  B: "Si",
+};
 
 const Stats: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
@@ -106,8 +107,8 @@ const Stats: React.FC = () => {
   const getColorDistribution = (note: string): ColorDistribution => {
     const distribution: ColorDistribution = {};
     // Initialize all colors with 0
-    allColors.forEach((color) => {
-      distribution[color] = 0;
+    colors.forEach((color) => {
+      distribution[color.name] = 0;
     });
 
     // Count occurrences of each color
@@ -153,7 +154,9 @@ const Stats: React.FC = () => {
           <tbody>
             {["C", "D", "E", "F", "G", "A", "B"].map((note) => (
               <tr key={note}>
-                <td>{note}</td>
+                <td>
+                  {note} ({noteToSolfege[note]})
+                </td>
                 <td>{getMostCommonColor(note)}</td>
                 <td>{correctAnswers[note]}</td>
                 <td>{calculateNoteAccuracy(note)}%</td>
@@ -169,9 +172,9 @@ const Stats: React.FC = () => {
           <thead>
             <tr>
               <th>Note</th>
-              {allColors.map((color) => (
-                <th key={color} style={{ color: color }}>
-                  {color.charAt(0).toUpperCase() + color.slice(1)}
+              {colors.map((color) => (
+                <th key={color.name} style={{ color: color.value }}>
+                  {color.label}
                 </th>
               ))}
             </tr>
@@ -181,9 +184,11 @@ const Stats: React.FC = () => {
               const distribution = getColorDistribution(note);
               return (
                 <tr key={note}>
-                  <td>{note}</td>
-                  {allColors.map((color) => (
-                    <td key={color}>{distribution[color]}</td>
+                  <td>
+                    {note} ({noteToSolfege[note]})
+                  </td>
+                  {colors.map((color) => (
+                    <td key={color.name}>{distribution[color.name]}</td>
                   ))}
                 </tr>
               );
