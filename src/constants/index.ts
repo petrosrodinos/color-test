@@ -15,13 +15,13 @@ interface Color {
 
 
 export const correctAnswers: Record<string, string> = {
-    C: "red",
-    D: "orange",
-    E: "yellow",
-    F: "green",
-    G: "blue",
-    A: "indigo",
-    B: "violet",
+    C: "green",
+    D: "cyan",
+    E: "blue",
+    F: "indigo",
+    G: "brown",
+    A: "red",
+    B: "orange",
 };
 
 export const musicNotes = [
@@ -40,8 +40,11 @@ export const colors: Color[] = [
     { label: "Yellow", name: "yellow", value: "#FFFF00" },
     { label: "Green", name: "green", value: "#00FF00" },
     { label: "Blue", name: "blue", value: "#0000FF" },
+    { label: "Pink", name: "pink", value: "#FFC0CB" },
     { label: "Indigo", name: "indigo", value: "#4B0082" },
-    { label: "Violet", name: "violet", value: "#9400D3" },
+    { label: "Grey", name: "grey", value: "#808080" },
+    { label: "Cyan", name: "cyan", value: "#00ffff" },
+    { label: "Brown", name: "brown", value: "#a52a2a" },
 ];
 
 export const noteToSolfege: Record<string, string> = {
