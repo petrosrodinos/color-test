@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Stats.css";
 import { getSpreasheetData } from "../sheets";
-import { colors, correctAnswers } from "../constants";
+import { colors, correctAnswers, noteToSolfege } from "../constants";
 
 interface TestResult {
   timestamp: string;
@@ -19,16 +19,6 @@ interface ColorDistribution {
 }
 
 // Define the colors array (same as in App.tsx)
-
-const noteToSolfege: Record<string, string> = {
-  C: "Do",
-  D: "Re",
-  E: "Mi",
-  F: "Fa",
-  G: "Sol",
-  A: "La",
-  B: "Si",
-};
 
 const Stats: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);

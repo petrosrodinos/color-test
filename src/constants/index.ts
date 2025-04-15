@@ -44,6 +44,16 @@ export const colors: Color[] = [
     { label: "Violet", name: "violet", value: "#9400D3" },
 ];
 
+export const noteToSolfege: Record<string, string> = {
+    C: "Do",
+    D: "Re",
+    E: "Mi",
+    F: "Fa",
+    G: "Sol",
+    A: "La",
+    B: "Si",
+};
+
 export type SolfegeName = "Do" | "Re" | "Mi" | "Fa" | "Sol" | "La" | "Si";
 
 // Map solfège names to audio files

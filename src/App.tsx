@@ -4,12 +4,7 @@ import { saveToGoogleSheet, formatDataForGoogleSheet } from "./googleSheets";
 import Result from "./components/Result";
 import Stats from "./pages/Stats";
 import "./App.css";
-
-// Import audio files
-
 import { musicNotes, colors, correctAnswers, audioFiles, SolfegeName } from "./constants";
-
-// Define the correct answers (this would typically come from a backend or configuration)
 
 function App() {
   // State to track the selected color for each note
