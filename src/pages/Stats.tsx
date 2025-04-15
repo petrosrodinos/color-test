@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Stats.css";
+import { getSpreasheetData } from "../sheets";
 
 interface TestResult {
-  id: string;
   timestamp: string;
-  note: string;
-  selectedColor: string;
-  correctColor: string;
-  isCorrect: boolean;
+  C: string;
+  D: string;
+  E: string;
+  F: string;
+  G: string;
+  A: string;
+  B: string;
 }
+
+const correctAnswers: Record<string, string> = {
+  C: "red",
+  D: "orange",
+  E: "yellow",
+  F: "green",
+  G: "blue",
+  A: "indigo",
+  B: "violet",
+};
 
 const Stats: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
@@ -18,12 +31,19 @@ const Stats: React.FC = () => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        // In a real application, this would fetch from your backend
-        // For now, we'll use localStorage as a placeholder
-        const storedResults = localStorage.getItem("testResults");
-        if (storedResults) {
-          setResults(JSON.parse(storedResults));
-        }
+        const response = await getSpreasheetData();
+        // Skip the header row and process the data
+        const processedResults = response.values.slice(1).map((row) => ({
+          timestamp: row[7], // Assuming timestamp is the last column
+          C: row[0],
+          D: row[1],
+          E: row[2],
+          F: row[3],
+          G: row[4],
+          A: row[5],
+          B: row[6],
+        }));
+        setResults(processedResults);
         setLoading(false);
       } catch (err) {
         setError("Failed to load statistics");
@@ -36,20 +56,45 @@ const Stats: React.FC = () => {
 
   const calculateAccuracy = () => {
     if (results.length === 0) return 0;
-    const correctAnswers = results.filter((result) => result.isCorrect).length;
-    return Math.round((correctAnswers / results.length) * 100);
+    let totalCorrect = 0;
+    let totalAnswers = 0;
+
+    results.forEach((result) => {
+      Object.entries(correctAnswers).forEach(([note, correctColor]) => {
+        if (result[note as keyof TestResult]) {
+          totalAnswers++;
+          if (result[note as keyof TestResult] === correctColor) {
+            totalCorrect++;
+          }
+        }
+      });
+    });
+
+    return Math.round((totalCorrect / totalAnswers) * 100);
   };
 
   const getMostCommonColor = (note: string) => {
-    const noteResults = results.filter((result) => result.note === note);
-    if (noteResults.length === 0) return "N/A";
-
     const colorCounts: Record<string, number> = {};
-    noteResults.forEach((result) => {
-      colorCounts[result.selectedColor] = (colorCounts[result.selectedColor] || 0) + 1;
+    results.forEach((result) => {
+      const color = result[note as keyof TestResult];
+      if (color) {
+        colorCounts[color] = (colorCounts[color] || 0) + 1;
+      }
     });
 
+    if (Object.keys(colorCounts).length === 0) return "N/A";
     return Object.entries(colorCounts).sort(([, a], [, b]) => b - a)[0][0];
+  };
+
+  const calculateNoteAccuracy = (note: string) => {
+    const noteResults = results.filter((result) => result[note as keyof TestResult]);
+    if (noteResults.length === 0) return 0;
+
+    const correctCount = noteResults.filter(
+      (result) => result[note as keyof TestResult] === correctAnswers[note]
+    ).length;
+
+    return Math.round((correctCount / noteResults.length) * 100);
   };
 
   if (loading) return <div className="stats-container">Loading statistics...</div>;
@@ -82,21 +127,14 @@ const Stats: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {["C", "D", "E", "F", "G", "A", "B"].map((note) => {
-              const noteResults = results.filter((result) => result.note === note);
-              const correctCount = noteResults.filter((result) => result.isCorrect).length;
-              const accuracy =
-                noteResults.length > 0 ? Math.round((correctCount / noteResults.length) * 100) : 0;
-
-              return (
-                <tr key={note}>
-                  <td>{note}</td>
-                  <td>{getMostCommonColor(note)}</td>
-                  <td>{noteResults[0]?.correctColor || "N/A"}</td>
-                  <td>{accuracy}%</td>
-                </tr>
-              );
-            })}
+            {["C", "D", "E", "F", "G", "A", "B"].map((note) => (
+              <tr key={note}>
+                <td>{note}</td>
+                <td>{getMostCommonColor(note)}</td>
+                <td>{correctAnswers[note]}</td>
+                <td>{calculateNoteAccuracy(note)}%</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
