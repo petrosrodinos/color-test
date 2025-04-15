@@ -190,8 +190,8 @@ const Stats: React.FC = () => {
                 <td>
                   {note} ({noteToSolfege[note]})
                 </td>
-                <td>{getMostCommonColor(note)}</td>
-                <td>{correctAnswers[note]}</td>
+                <td style={getColorStyle(getMostCommonColor(note))}>{getMostCommonColor(note)}</td>
+                <td style={getColorStyle(correctAnswers[note])}>{correctAnswers[note]}</td>
                 <td>{calculateNoteAccuracy(note)}%</td>
               </tr>
             ))}
