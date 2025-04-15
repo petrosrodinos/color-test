@@ -1,6 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 import { saveToGoogleSheet, formatDataForGoogleSheet } from "./googleSheets";
+import Result from "./components/Result";
+import Stats from "./pages/Stats";
 
 // Import audio files
 import doAudio from "./assets/notes/Do.mp3";
@@ -47,6 +50,17 @@ const audioFiles: Record<SolfegeName, string> = {
   Si: siAudio,
 };
 
+// Define the correct answers (this would typically come from a backend or configuration)
+const correctAnswers: Record<string, string> = {
+  C: "red",
+  D: "orange",
+  E: "yellow",
+  F: "green",
+  G: "blue",
+  A: "indigo",
+  B: "violet",
+};
+
 function App() {
   // State to track the selected color for each note
   const [noteColors, setNoteColors] = useState<Record<string, string>>({});
@@ -57,6 +71,9 @@ function App() {
     success: boolean;
     message: string;
   } | null>(null);
+
+  // State to show results
+  const [showResults, setShowResults] = useState(false);
 
   // Create audio elements for each note
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
@@ -126,8 +143,8 @@ function App() {
       });
 
       if (result.success) {
-        // Clear the form after successful submission
-        setNoteColors({});
+        // Show results after successful submission
+        setShowResults(true);
       }
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -140,64 +157,118 @@ function App() {
     }
   };
 
+  // Reset the form
+  const handleReset = () => {
+    setNoteColors({});
+    setShowResults(false);
+    setSubmitStatus(null);
+  };
+
   return (
-    <div className="app-container">
-      <h1>Music Note to Color Matching</h1>
-      <p>Select a color for each music note</p>
+    <Router>
+      <div className="App">
+        <nav className="nav-container">
+          <Link to="/" className="nav-link">
+            Home
+          </Link>
+          <Link to="/stats" className="nav-link">
+            Statistics
+          </Link>
+        </nav>
 
-      <div className="notes-container">
-        {musicNotes.map(({ note, solfege }) => (
-          <div key={note} className="note-item">
-            <div className="note-header">
-              <div className="note-name">
-                {note} <span className="solfege-label">({solfege})</span>
+        <Routes>
+          <Route path="/stats" element={<Stats />} />
+          <Route
+            path="/"
+            element={
+              <div className="container">
+                {!showResults ? (
+                  <>
+                    <h1>Music Note to Color Matching</h1>
+                    <p>Select a color for each music note</p>
+
+                    <div className="notes-container">
+                      {musicNotes.map(({ note, solfege }) => (
+                        <div key={note} className="note-item">
+                          <div className="note-header">
+                            <div className="note-name">
+                              {note} <span className="solfege-label">({solfege})</span>
+                            </div>
+                            <button
+                              className="play-button"
+                              onClick={() => playNote(solfege)}
+                              aria-label={`Play ${note} note`}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="play-icon"
+                              >
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="color-options">
+                            {colors.map((color) => (
+                              <label key={color.name} className="color-option">
+                                <input
+                                  type="radio"
+                                  name={`note-${note}`}
+                                  value={color.name}
+                                  checked={noteColors[note] === color.name}
+                                  onChange={() => handleColorChange(note, color.name)}
+                                />
+                                <span
+                                  className="color-swatch"
+                                  style={{ backgroundColor: color.value }}
+                                ></span>
+                                <span className="color-name">{color.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="submit-container">
+                      <button
+                        onClick={handleSubmit}
+                        className="submit-button"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Saving..." : "Submit"}
+                      </button>
+
+                      {submitStatus && (
+                        <div
+                          className={`status-message ${submitStatus.success ? "success" : "error"}`}
+                        >
+                          {submitStatus.message}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="results-section">
+                    <Result
+                      userAnswers={noteColors}
+                      correctAnswers={correctAnswers}
+                      musicNotes={musicNotes}
+                    />
+                    <div className="reset-container">
+                      <button onClick={handleReset} className="reset-button">
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <button
-                className="play-button"
-                onClick={() => playNote(solfege)}
-                aria-label={`Play ${note} note`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="play-icon"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </button>
-            </div>
-            <div className="color-options">
-              {colors.map((color) => (
-                <label key={color.name} className="color-option">
-                  <input
-                    type="radio"
-                    name={`note-${note}`}
-                    value={color.name}
-                    checked={noteColors[note] === color.name}
-                    onChange={() => handleColorChange(note, color.name)}
-                  />
-                  <span className="color-swatch" style={{ backgroundColor: color.value }}></span>
-                  <span className="color-name">{color.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
+            }
+          />
+        </Routes>
       </div>
-
-      <div className="submit-container">
-        <button onClick={handleSubmit} className="submit-button" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Submit"}
-        </button>
-
-        {submitStatus && (
-          <div className={`status-message ${submitStatus.success ? "success" : "error"}`}>
-            {submitStatus.message}
-          </div>
-        )}
-      </div>
-    </div>
+    </Router>
   );
 }
 
